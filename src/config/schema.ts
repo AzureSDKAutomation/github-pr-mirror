@@ -1,9 +1,14 @@
 import convict, { Config } from 'convict';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 export type PRMirrorConfig = {
+  env: string;
   githubToken: string;
   sourceRepo: string;
   targetRepo: string;
+  targetBase: string;
 };
 
 const emptyValidator = (value?: string): void => {
@@ -13,6 +18,11 @@ const emptyValidator = (value?: string): void => {
 };
 
 export const configurationSchema: Config<PRMirrorConfig> = convict<PRMirrorConfig>({
+  env: {
+    default: '',
+    env: 'ENV',
+    format: String
+  },
   githubToken: {
     default: '',
     doc: 'Generate from https://github.com/settings/tokens/new',
@@ -30,5 +40,10 @@ export const configurationSchema: Config<PRMirrorConfig> = convict<PRMirrorConfi
     doc: 'Example: test-repo-tih/azure-rest-api-specs',
     env: 'TARGET_REPO',
     format: emptyValidator
+  },
+  targetBase: {
+    default: 'master',
+    env: 'TARGET_PR_BASE',
+    format: String
   }
 });
