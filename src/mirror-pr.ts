@@ -84,13 +84,27 @@ interface IMirrorContext {
   targetBase: string;
 }
 
+const mirrorClosePR = async (prRef: string, context: IMirrorContext) => {
+  const targetPR = context.targetPRMap[prRef];
+  console.log(`Closing #${targetPR.number} ${prRef} ${targetPR.title}:`);
+
+  const { data: result } = await closePullRequest(context.github, {
+    owner: context.targetOwner, repo: context.targetRepo,
+    pull_number: targetPR.number
+  });
+  console.log(`\tClosed: ${result.html_url}`);
+
+  return result;
+};
+
 const mirrorCreatePR = async (prRef: string, context: IMirrorContext) => {
   const sourcePR = context.sourcePRMap[prRef];
   const targetPR = context.targetPRMap[prRef];
-  console.log(`#${sourcePR.id} ${prRef} ${sourcePR.title}:\n`);
+  console.log(`#${sourcePR.number} ${prRef} ${sourcePR.title}:`);
 
   if (targetPR) {
     console.error(`\tPR from ${prRef} already exist: ${targetPR.html_url}`);
+    await mirrorClosePR(prRef, context);
   }
 
   const createdPR = await createPullRequest(context.github, {
@@ -101,20 +115,18 @@ const mirrorCreatePR = async (prRef: string, context: IMirrorContext) => {
     maintainer_can_modify: false
   });
   console.log(`\tCreated: ${createdPR.html_url}`);
+
+  return createdPR;
 };
-
-const mirrorClosePR = async (prRef: string, context: IMirrorContext) => {
-  const targetPR = context.targetPRMap[prRef];
-  console.log(`Closing #${targetPR.id} ${prRef} ${targetPR.title}:\n`);
-
-}
 
 export const mirrorPR = async (github: Octokit, sourceRepoRef: string, targetRepoRef: string, targetBase: string) => {
   const [ sourceOwner, sourceRepo ] = sourceRepoRef.split('/');
   const [ targetOwner, targetRepo ] = targetRepoRef.split('/');
 
   //  Get prs from both repository
+  console.log(`Fetching PR from ${sourceRepoRef}`);
   const sourcePRs = await getPullRequests(github, { owner: sourceOwner, repo: sourceRepo });
+  console.log(`Fetching PR from ${targetRepoRef}`);
   const targetPRs = await getPullRequests(github, { owner: targetOwner, repo: targetRepo });
 
   // Calculate prs to create/close
@@ -142,7 +154,5 @@ export const mirrorPR = async (github: Octokit, sourceRepoRef: string, targetRep
 
   for (const prRef of toClose) {
     await mirrorClosePR(prRef, context);
-
   }
-
 };
