@@ -17,7 +17,7 @@
     "@types/dotenv": "^6.1.1",
     "gulp": "^4.0.2",
     "@microsoft/node-library-build": "^6.1.4",
-    "@uifabric/tslint-rules": "^7.0.3",
+    "@uifabric/tslint-rules": "^7.0.5",
     "@microsoft/gulp-core-build": "^3.11.1",
     "@microsoft/rush-stack-compiler-3.5": "^0.1.6",
     "@types/node": "^12.7.2"
