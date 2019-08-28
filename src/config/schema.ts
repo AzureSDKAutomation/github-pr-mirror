@@ -27,23 +27,27 @@ export const configurationSchema: Config<PRMirrorConfig> = convict<PRMirrorConfi
     default: '',
     doc: 'Generate from https://github.com/settings/tokens/new',
     env: 'GITHUB_TOKEN',
+    arg: 'githubToken',
     format: emptyValidator
   },
   sourceRepo: {
     default: '',
     doc: 'Example: Azure/azure-rest-api-specs',
     env: 'SOURCE_REPO',
+    arg: 'source',
     format: emptyValidator
   },
   targetRepo: {
     default: '',
     doc: 'Example: test-repo-tih/azure-rest-api-specs',
     env: 'TARGET_REPO',
+    arg: 'target',
     format: emptyValidator
   },
   targetBase: {
     default: 'master',
     env: 'TARGET_PR_BASE',
+    arg: 'target-base',
     format: String
   }
 });

@@ -149,10 +149,18 @@ export const mirrorPR = async (github: Octokit, sourceRepoRef: string, targetRep
 
   // Create/Close prs in target repo
   for (const prRef of toCreate) {
-    await mirrorCreatePR(prRef, context);
+    try {
+      await mirrorCreatePR(prRef, context);
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   for (const prRef of toClose) {
-    await mirrorClosePR(prRef, context);
+    try {
+      await mirrorClosePR(prRef, context);
+    } catch (e) {
+      console.log(e);
+    }
   }
 };
