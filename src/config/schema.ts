@@ -35,7 +35,7 @@ export const configurationSchema: Config<PRMirrorConfig> = convict<PRMirrorConfi
     doc: 'Example: Azure/azure-rest-api-specs',
     env: 'SOURCE_REPO',
     arg: 'source',
-    format: emptyValidator
+    format: String
   },
   targetRepo: {
     default: '',
