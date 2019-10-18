@@ -1,5 +1,5 @@
 import Octokit from '@octokit/rest';
-import { toDictionary, createPullRequest, closePullRequest, getPullRequests } from './common';
+import { toDictionary, createPullRequest, closePullRequest, getPullRequests, IGithubContext } from './common';
 
 const mirrorPRTitle = '[Mirror]';
 
@@ -34,16 +34,7 @@ const calcPRToModify = (sourcePRHeads: string[], targetPRHeads: string[]) => {
   return { toCreate, toClose };
 };
 
-export interface IMirrorContext {
-  github: Octokit;
-  sourcePRMap: { [key: string]: Octokit.PullsListResponseItem };
-  targetPRMap: { [key: string]: Octokit.PullsListResponseItem };
-  targetOwner: string;
-  targetRepo: string;
-  targetBase: string;
-}
-
-const mirrorClosePR = async (prRef: string, context: IMirrorContext) => {
+const mirrorClosePR = async (prRef: string, context: IGithubContext) => {
   const targetPR = context.targetPRMap[prRef];
   console.log(`Closing #${targetPR.number} ${prRef} ${targetPR.title}:`);
 
@@ -56,7 +47,7 @@ const mirrorClosePR = async (prRef: string, context: IMirrorContext) => {
   return result;
 };
 
-const mirrorCreatePR = async (prRef: string, context: IMirrorContext) => {
+const mirrorCreatePR = async (prRef: string, context: IGithubContext) => {
   const sourcePR = context.sourcePRMap[prRef];
   const targetPR = context.targetPRMap[prRef];
   console.log(`#${sourcePR.number} ${prRef} ${sourcePR.title}:`);
@@ -96,7 +87,7 @@ export const mirrorPR = async (github: Octokit, sourceRepoRef: string, targetRep
   const targetPRRefs = Object.keys(targetPRMap)
     .filter(prRef => targetPRMap[prRef].title.startsWith(mirrorPRTitle));
 
-  const context: IMirrorContext = {
+  const context: IGithubContext = {
     github, sourcePRMap, targetPRMap,
     targetOwner, targetRepo, targetBase
   };

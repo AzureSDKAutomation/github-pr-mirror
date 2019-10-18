@@ -41,3 +41,12 @@ export const closePullRequest = async (github: Octokit, params: Octokit.PullsUpd
         state: 'closed'
     });
 };
+
+export interface IGithubContext {
+  github: Octokit;
+  sourcePRMap: { [key: string]: Octokit.PullsListResponseItem };
+  targetPRMap: { [key: string]: Octokit.PullsListResponseItem };
+  targetOwner: string;
+  targetRepo: string;
+  targetBase: string;
+}

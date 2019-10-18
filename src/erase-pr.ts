@@ -1,6 +1,5 @@
 import Octokit from '@octokit/rest';
-import { IMirrorContext } from './mirror-pr';
-import { toDictionary, closePullRequest, getPullRequests } from './common';
+import { toDictionary, closePullRequest, getPullRequests, IGithubContext } from './common';
 
 const calcPRToErase = (prHeads: string[]) => {
     const targetPRNeedClose: { [label: string]: boolean } = {};
@@ -12,7 +11,7 @@ const calcPRToErase = (prHeads: string[]) => {
     return toClose;
 };
 
-const erasePR = async (prRef: string, context: IMirrorContext) => {
+const erasePR = async (prRef: string, context: IGithubContext) => {
     const pr = context.targetPRMap[prRef];
     console.log(`Closing #${pr.number} ${prRef} ${pr.title}`);
 
@@ -34,7 +33,7 @@ export const eraseAllPR = async (github: Octokit, targetRepoRef: string, targetB
     const targetPRMap = toDictionary(targetPRs, pr => pr.head.label);
     const targetPRRefs = Object.keys(targetPRMap);
 
-    const context: IMirrorContext = {
+    const context: IGithubContext = {
         github: github,
         sourcePRMap: {},
         targetPRMap: targetPRMap,
