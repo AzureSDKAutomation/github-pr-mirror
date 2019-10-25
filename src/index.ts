@@ -6,10 +6,10 @@ const main = async () => {
   const github = new Octokit({
     auth: prMirrorConfig.githubToken
   });
-  const { sourceRepo, targetRepo, targetBase } = prMirrorConfig;
+  const { sourceRepo, targetRepo, targetBase, prPrefix } = prMirrorConfig;
 
   try {
-    await mirrorPR(github, sourceRepo, targetRepo, targetBase);
+    await mirrorPR(github, sourceRepo, targetRepo, targetBase, prPrefix);
   } catch (e) {
     console.error(e);
   }

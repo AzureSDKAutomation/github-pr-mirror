@@ -1,52 +1,9 @@
 import Octokit from '@octokit/rest';
-
-const mirrorPRTitle = '[Mirror]';
-
-const toDictionary = <T>(input: T[], fn: (elem: T) => string) => {
-  const result: { [key: string]: T } = {};
-  for (const elem of input) {
-    result[fn(elem)] = elem;
-  }
-
-  return result;
-};
+import { toDictionary, createPullRequest, closePullRequest, getPullRequests, IGithubContext } from './common';
 
 const transformUrl = (url: string) => {
   // Place URL in pr but do not let github link the pr
   return `\`${url}\``;
-};
-
-type GithubPageniteReturn<TAPI> =
-  TAPI extends (args: unknown) => Promise<Octokit.Response<infer TResponse>>
-    ? TResponse : unknown;
-type GithubPageniteParams<TAPI> =
-  TAPI extends (args: infer TParams) => unknown
-    ? TParams: unknown;
-
-function githubPagenite<TAPI extends { endpoint: Octokit.Endpoint }>(
-  github: Octokit,
-  api: TAPI,
-  params: GithubPageniteParams<TAPI>
-): Promise<GithubPageniteReturn<TAPI>> {
-  return github.paginate(
-    api.endpoint.merge(params as Octokit.EndpointOptions)
-  ) as Promise<GithubPageniteReturn<TAPI>>;
-}
-
-const getPullRequests = async (github: Octokit, params: Octokit.PullsListParams) => {
-  return githubPagenite(github, github.pulls.list, params);
-};
-
-const createPullRequest = async (github: Octokit, params: Octokit.PullsCreateParams) => {
-  const { data: createdPR } = await github.pulls.create(params);
-  return createdPR;
-};
-
-const closePullRequest = async (github: Octokit, params: Octokit.PullsUpdateParams) => {
-  return github.pulls.update({
-    ...params,
-    state: 'closed'
-  });
 };
 
 const calcPRToModify = (sourcePRHeads: string[], targetPRHeads: string[]) => {
@@ -75,16 +32,7 @@ const calcPRToModify = (sourcePRHeads: string[], targetPRHeads: string[]) => {
   return { toCreate, toClose };
 };
 
-interface IMirrorContext {
-  github: Octokit;
-  sourcePRMap: { [key: string]: Octokit.PullsListResponseItem };
-  targetPRMap: { [key: string]: Octokit.PullsListResponseItem };
-  targetOwner: string;
-  targetRepo: string;
-  targetBase: string;
-}
-
-const mirrorClosePR = async (prRef: string, context: IMirrorContext) => {
+const mirrorClosePR = async (prRef: string, context: IGithubContext) => {
   const targetPR = context.targetPRMap[prRef];
   console.log(`Closing #${targetPR.number} ${prRef} ${targetPR.title}:`);
 
@@ -97,7 +45,7 @@ const mirrorClosePR = async (prRef: string, context: IMirrorContext) => {
   return result;
 };
 
-const mirrorCreatePR = async (prRef: string, context: IMirrorContext) => {
+const mirrorCreatePR = async (prRef: string, context: IGithubContext) => {
   const sourcePR = context.sourcePRMap[prRef];
   const targetPR = context.targetPRMap[prRef];
   console.log(`#${sourcePR.number} ${prRef} ${sourcePR.title}:`);
@@ -110,7 +58,7 @@ const mirrorCreatePR = async (prRef: string, context: IMirrorContext) => {
   const createdPR = await createPullRequest(context.github, {
     owner: context.targetOwner, repo: context.targetRepo,
     base: context.targetBase, head: prRef,
-    title: `${mirrorPRTitle} ${sourcePR.title}`,
+    title: `${context.prPrefix} ${sourcePR.title}`,
     body: `Mirror from ${transformUrl(sourcePR.html_url)}`,
     maintainer_can_modify: false
   });
@@ -119,15 +67,23 @@ const mirrorCreatePR = async (prRef: string, context: IMirrorContext) => {
   return createdPR;
 };
 
-export const mirrorPR = async (github: Octokit, sourceRepoRef: string, targetRepoRef: string, targetBase: string) => {
-  const [ sourceOwner, sourceRepo ] = sourceRepoRef.split('/');
-  const [ targetOwner, targetRepo ] = targetRepoRef.split('/');
+const getPRFromRef = async (github: Octokit, repoRef: string):
+  Promise<[Octokit.PullsListResponseItem[], string, string]> => {
+  if (repoRef === '') {
+    return [[], '', ''];
+  }
+  const [owner, repo] = repoRef.split('/');
+  console.log(`Fetching PR from ${repoRef}`);
+  const prs = await getPullRequests(github, { owner, repo });
 
+  return [prs, owner, repo];
+};
+
+export const mirrorPR = async (github: Octokit, sourceRepoRef: string, targetRepoRef: string, targetBase: string,
+  prPrefix: string) => {
   //  Get prs from both repository
-  console.log(`Fetching PR from ${sourceRepoRef}`);
-  const sourcePRs = await getPullRequests(github, { owner: sourceOwner, repo: sourceRepo });
-  console.log(`Fetching PR from ${targetRepoRef}`);
-  const targetPRs = await getPullRequests(github, { owner: targetOwner, repo: targetRepo });
+  const [sourcePRs] = await getPRFromRef(github, sourceRepoRef);
+  const [targetPRs, targetOwner, targetRepo] = await getPRFromRef(github, targetRepoRef);
 
   // Calculate prs to create/close
   const sourcePRMap = toDictionary(sourcePRs, pr => pr.head.label);
@@ -135,11 +91,16 @@ export const mirrorPR = async (github: Octokit, sourceRepoRef: string, targetRep
 
   const sourcePRRefs = Object.keys(sourcePRMap);
   const targetPRRefs = Object.keys(targetPRMap)
-    .filter(prRef => targetPRMap[prRef].title.startsWith(mirrorPRTitle));
+    .filter(prRef => targetPRMap[prRef].title.startsWith(prPrefix));
 
-  const context: IMirrorContext = {
-    github, sourcePRMap, targetPRMap,
-    targetOwner, targetRepo, targetBase
+  const context: IGithubContext = {
+    github: github,
+    sourcePRMap: sourcePRMap,
+    targetPRMap: targetPRMap,
+    targetOwner: targetOwner,
+    targetRepo: targetRepo,
+    targetBase: targetBase,
+    prPrefix: prPrefix
   };
 
   const { toCreate, toClose } = calcPRToModify(sourcePRRefs, targetPRRefs);
