@@ -1,7 +1,6 @@
 import { prMirrorConfig } from './config';
 import Octokit from '@octokit/rest';
 import { mirrorPR } from './mirror-pr';
-// import { eraseAllPR } from './erase-pr';
 
 const main = async () => {
   const github = new Octokit({
