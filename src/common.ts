@@ -49,4 +49,5 @@ export interface IGithubContext {
   targetOwner: string;
   targetRepo: string;
   targetBase: string;
+  prPrefix: string;
 }

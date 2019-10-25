@@ -9,6 +9,7 @@ export type PRMirrorConfig = {
   sourceRepo: string;
   targetRepo: string;
   targetBase: string;
+  prPrefix: string;
 };
 
 const emptyValidator = (value?: string): void => {
@@ -48,6 +49,12 @@ export const configurationSchema: Config<PRMirrorConfig> = convict<PRMirrorConfi
     default: 'master',
     env: 'TARGET_PR_BASE',
     arg: 'target-base',
+    format: String
+  },
+  prPrefix: {
+    default: '',
+    env: 'PR_PREFIX',
+    arg: 'pr-prefix',
     format: String
   }
 });
