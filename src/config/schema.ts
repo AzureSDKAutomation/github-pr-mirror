@@ -52,7 +52,7 @@ export const configurationSchema: Config<PRMirrorConfig> = convict<PRMirrorConfi
     format: String
   },
   prPrefix: {
-    default: '',
+    default: '[Mirror]',
     env: 'PR_PREFIX',
     arg: 'pr-prefix',
     format: String
