@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "dotenv": "^8.2.0",
-    "convict": "^5.2.0",
+    "convict": "^6.2.2",
     "@octokit/rest": "^16.34.0",
     "@ts-common/string-map": "^0.3.0"
   }
