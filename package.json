@@ -16,15 +16,15 @@
     "@types/convict": "^4.2.1",
     "@types/dotenv": "^8.2.0",
     "gulp": "^4.0.2",
-    "@microsoft/node-library-build": "^6.3.2",
+    "@microsoft/node-library-build": "^6.5.34",
     "@uifabric/tslint-rules": "^7.0.5",
-    "@microsoft/gulp-core-build": "^3.12.2",
+    "@microsoft/gulp-core-build": "^3.17.20",
     "@microsoft/rush-stack-compiler-3.5": "^0.3.2",
     "@types/node": "^12.11.7"
   },
   "dependencies": {
     "dotenv": "^8.2.0",
-    "convict": "^5.2.0",
+    "convict": "^6.2.3",
     "@octokit/rest": "^16.34.0",
     "@ts-common/string-map": "^0.3.0"
   }
